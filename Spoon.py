@@ -1,20 +1,27 @@
-# import logging
+import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResultArticle
 import re
-
+import os
 API_TOKEN = 'YOUR_BOT_TOKEN_HERE'
 
 # Настройка логирования
-# logging.basicConfig(level=logging.INFO)
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("TG BOT")
+logger.setLevel(logging.INFO)
 # Инициализация бота и диспетчера
-bot = Bot(token=API_TOKEN)
+bot = Bot(token='6773330573:AAFIlZYa39KMGFtyJg_BJv4yvG-awTHCp_E')
 dp = Dispatcher(bot)
 
 # Функция для вычисления результата
 def calculate(expression:str):
+    spisok = [f'{i}'for i in range(10)]
+    spisok += [' ', '.', '/', '*', '!', '=', '+', '-', '(', ')']
     try:
+        for i in expression:
+            if i not in spisok:
+                return "!!!Ошибка: в примере не должно быть букв!!!"
+
         return str(eval(expression))
     except:
         return "Ошибка"
@@ -24,8 +31,10 @@ def calculate(expression:str):
 async def inline_query(inline_query: InlineQuery):
 
     text = inline_query.query or "0"
+    text = " ".join(text.split())
     result = calculate(text)
-    
+    logger.debug(f"Запрос:{text} Результат:{result}")
+
     item = InlineQueryResultArticle(
         id='1',
         title=f'Результат: {result}',
