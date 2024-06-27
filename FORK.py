@@ -1,65 +1,45 @@
-from uuid import uuid4
-
-from aiogram import Bot, types, Dispatcher
+# import logging
+from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResultArticle
-from aiogram.utils.executor import Executor
+import re
 
-import subprocess
-import httpx, json
+API_TOKEN = 'YOUR_BOT_TOKEN_HERE'
 
-bot = Bot(token='6773330573:AAFIlZYa39KMGFtyJg_BJv4yvG-awTHCp_E')
+# Настройка логирования
+# logging.basicConfig(level=logging.INFO)
+
+# Инициализация бота и диспетчера
+bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
+# Функция для вычисления результата
+def calculate(expression:str):
+    try:
+        return str(eval(expression))
+    except:
+        return "Ошибка"
 
-# Функция-заглушка для получения списка валют
-
-def translate(text):
-
-    deeplx_api = "http://127.0.0.1:1188/translate"
-
-    data = {
-        "text": text,
-        "source_lang": "EN",
-        "target_lang": "RU"
-    }
-
-    post_data = json.dumps(data)
-    r = httpx.post(url = deeplx_api, data = post_data).text
-    return r
-
-def create_inline_result(_title:str, text:str)->InlineQueryResultArticle:
-    return InlineQueryResultArticle(
-                id=str(uuid4()),
-                title=_title,
-                input_message_content=InputTextMessageContent(
-                    message_text=text))
-
+# Обработчик инлайн-запросов
 @dp.inline_handler()
-async def inline_query_handler(inline_query: InlineQuery):
-    query_text = inline_query.query
-    print(query_text)
-    if not query_text:
-        # If no text is provided, display a list of currencies
-        results = [
-            create_inline_result("Введите текст", "Введите текст")
-        ]
-    else:
-        results = [
-            create_inline_result("Попугай", f'Попугай говорит: {query_text}: {translate(query_text)}')
-        ]
+async def inline_query(inline_query: InlineQuery):
 
-    # else:
-        # results = [
-        #     create_inline_result("error", "error")
-        # ]
+    text = inline_query.query or "0"
+    result = calculate(text)
+    
+    item = InlineQueryResultArticle(
+        id='1',
+        title=f'Результат: {result}',
+        input_message_content=InputTextMessageContent(f"{text} = {result}"),
+        description=f'{text} = {result}'
+    )
+    await bot.answer_inline_query(inline_query.id, results=[item], cache_time=1)
 
-    await bot.answer_inline_query(inline_query.id, results=results, cache_time=1)
-
+# Обработчик обычных сообщений
+# @dp.message_handler(regexp=r'^[\d\+\-\*/\(\)\.\s]+$')
+# async def handle_message(message: types.Message):
+#     expression = message.text
+#     result = calculate(expression)
+#     await message.reply(f"{expression} = {result}")
 
 if __name__ == '__main__':
-
-    # p = subprocess.Popen(["deeplx_windows_amd64.exe"])
-
-    executor = Executor(dp)
-    executor.start_polling()
- 
+    executor.start_polling(dp, skip_updates=True)
