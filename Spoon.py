@@ -33,12 +33,9 @@ async def inline_query(inline_query: InlineQuery):
     text = inline_query.query or "0"
     text = " ".join(text.split())
     result = calculate(text)
-<<<<<<< HEAD:Spoon.py
+
     logger.debug(f"Запрос:{text} Результат:{result}")
 
-=======
-    print(f"Запрос: {text} -> {result}")
->>>>>>> 394f03c (add help):FORK.py
     item = InlineQueryResultArticle(
         id='1',
         title=f'Результат: {result}',
